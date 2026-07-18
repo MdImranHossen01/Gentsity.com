@@ -16,10 +16,25 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '20'));
+    const search = searchParams.get('search') || '';
+    const role = searchParams.get('role') || '';
 
     await connectToDatabase();
 
-    const matchQuery = { role: { $ne: 'super_admin' as const } };
+    const matchQuery: any = { role: { $ne: 'super_admin' as const } };
+
+    if (search) {
+      matchQuery.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (role && ['user', 'admin', 'manager'].includes(role)) {
+      matchQuery.role = role;
+    }
+
     const totalCount = await User.countDocuments(matchQuery);
 
     // Aggregate users with their order stats (efficiently skip/limit before lookup)

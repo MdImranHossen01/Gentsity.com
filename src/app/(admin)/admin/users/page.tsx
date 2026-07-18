@@ -78,14 +78,16 @@ function UsersContent() {
   const [isAssignAdminOpen, setIsAssignAdminOpen] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
 
   const { data: session } = useSession();
   const isSuperAdmin = (session?.user as any)?.role === 'super_admin';
 
-  const fetchUsers = async (page = currentPage) => {
+  const fetchUsers = async (page = currentPage, searchQuery = search, role = roleFilter) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/users?page=${page}&limit=20`);
+      const response = await fetch(`/api/admin/users?page=${page}&limit=20&search=${encodeURIComponent(searchQuery)}&role=${role}`);
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
       setUsers(data.users || []);
@@ -100,8 +102,12 @@ function UsersContent() {
   };
 
   useEffect(() => {
-    fetchUsers(currentPage);
-  }, [currentPage]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchUsers(currentPage, search, roleFilter);
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, search, roleFilter]);
 
   useEffect(() => {
     const pageFromParams = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -109,6 +115,16 @@ function UsersContent() {
       setCurrentPage(pageFromParams);
     }
   }, [searchParams]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleRoleChange = (val: string) => {
+    setRoleFilter(val);
+    setCurrentPage(1);
+  };
 
   const openUserDetails = (user: UserData) => {
     setSelectedUser(user);
@@ -237,6 +253,32 @@ function UsersContent() {
           <div className="bg-primary/10 px-5 py-2.5 rounded-full border border-primary/20">
             <span className="text-primary font-bold text-sm">{totalCount} Total Users</span>
           </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-6 rounded-2xl border shadow-sm">
+        <div className="relative w-full sm:max-w-md">
+          <input
+            type="text"
+            placeholder="Search by name, email, or phone..."
+            value={search}
+            onChange={handleSearchChange}
+            className="w-full h-11 px-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none font-semibold text-slate-700 text-sm"
+          />
+        </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Filter by Role</span>
+          <select
+            value={roleFilter}
+            onChange={(e) => handleRoleChange(e.target.value)}
+            className="h-11 px-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary/50 outline-none font-semibold text-slate-700 text-sm min-w-[150px]"
+          >
+            <option value="">All Roles</option>
+            <option value="user">User</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
       </div>
 
