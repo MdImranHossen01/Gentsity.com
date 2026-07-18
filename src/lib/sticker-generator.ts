@@ -116,13 +116,7 @@ export async function printStickerInvoice(orderOrOrders: any | any[], settings: 
               <div style="font-weight: 700; font-size: 13px; color: #000000; text-transform: uppercase;">${order.shippingAddress?.fullName || 'Customer'}</div>
               <div style="font-weight: 700; font-size: 13px; color: #000000;">${order.shippingAddress?.phone || ''}</div>
               <div style="font-size: 10px; color: #333333; line-height: 1.3;">
-                ${[order.shippingAddress?.street, order.shippingAddress?.city]
-                  .map(part => (part || '').trim())
-                  .filter(part => {
-                    const lower = part.toLowerCase();
-                    return lower !== 'outside dhaka' && lower !== 'inside dhaka' && part !== '';
-                  })
-                  .join(', ')}
+                ${order.shippingAddress?.street || ''}
               </div>
               ${codAmount > 0 ? `
                 <div style="font-weight: 700; font-size: 13px; margin-top: 4px; border-top: 1px dashed #000000; padding-top: 4px; display: flex; justify-content: space-between; align-items: center;">
