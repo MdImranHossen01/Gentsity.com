@@ -154,7 +154,7 @@ export default function ProductCardV4({ product, isFlashSale }: ProductCardProps
     >
       {/* Boutique Image Container */}
       <div className="relative aspect-[3/4] rounded-none overflow-hidden transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(var(--primary-rgb),0.25)] group-hover:-translate-y-4">
-        <Link href={`/product/${product.slug}`} className="block h-full w-full">
+        <Link href={`/product/${product.slug}`} className="relative block h-full w-full">
           {product.images?.length > 1 ? (
             <>
               <Image

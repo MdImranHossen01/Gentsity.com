@@ -139,7 +139,7 @@ export default function ProductCardV6({ product, isFlashSale, priority }: Produc
     <div className="group relative flex flex-col font-jost animate-in fade-in duration-700">
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-muted rounded-none">
-        <Link href={`/product/${product.slug}`} className="block h-full w-full">
+        <Link href={`/product/${product.slug}`} className="relative block h-full w-full">
           <Image
             src={product.images?.[0] || '/placeholder.png'}
             alt={product.name}

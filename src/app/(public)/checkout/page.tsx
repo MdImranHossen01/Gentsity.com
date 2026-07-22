@@ -356,6 +356,17 @@ function CheckoutContent() {
 
   const submissionSucceededRef = useRef(false);
 
+  useEffect(() => {
+    return () => {
+      // Use a timeout to let the route transition complete
+      setTimeout(() => {
+        if (!submissionSucceededRef.current && typeof window !== 'undefined' && window.location.pathname !== '/checkout') {
+          dispatch(clearCart());
+        }
+      }, 100);
+    };
+  }, [dispatch]);
+
   const onSubmit = async (values: CheckoutValues) => {
     setLoading(true);
     try {
