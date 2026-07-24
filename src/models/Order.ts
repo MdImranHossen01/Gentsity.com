@@ -29,7 +29,7 @@ export interface IOrder extends Document {
   };
   paymentMethod: string;
   paymentStatus: 'Pending' | 'Paid' | 'Failed';
-  status: 'Order Placed' | 'Confirmed' | 'Paid' | 'Ready for Delivery' | 'Released for Delivery' | 'Cancelled' | 'Delivered';
+  status: 'Order Placed' | 'Confirmed' | 'Paid' | 'Hold' | 'Ready for Delivery' | 'Released for Delivery' | 'Cancelled' | 'Delivered';
   transactionId?: string;
   walletAmountUsed?: number;
   earnedRewardAmount?: number;
@@ -90,7 +90,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
     paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed'], default: 'Pending' },
     status: {
       type: String,
-      enum: ['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'],
+      enum: ['Order Placed', 'Confirmed', 'Paid', 'Hold', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'],
       default: 'Order Placed',
     },
     transactionId: { type: String },

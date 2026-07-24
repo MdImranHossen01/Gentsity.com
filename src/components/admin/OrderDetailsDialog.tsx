@@ -450,7 +450,7 @@ export default function OrderDetailsDialog({
                         onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                         className="w-full text-sm p-2 border rounded bg-white"
                       >
-                        {['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'].map(s => (
+                        {['Order Placed', 'Confirmed', 'Paid', 'Hold', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'].map(s => (
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>

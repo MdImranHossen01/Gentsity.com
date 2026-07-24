@@ -773,6 +773,7 @@ function OrdersContent() {
       case 'Order Placed': return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-none">Placed</Badge>;
       case 'Confirmed': return <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-none">Confirmed</Badge>;
       case 'Paid': return <Badge variant="secondary" className="bg-green-100 text-green-800 border-none text-[10px]">Paid</Badge>;
+      case 'Hold': return <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-none text-[10px]">Hold</Badge>;
       case 'Ready for Delivery': return <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-none text-[10px]">Ready</Badge>;
       case 'Released for Delivery': return <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-none text-[10px]">Released</Badge>;
       case 'Delivered': return <Badge variant="default" className="bg-green-600 text-white border-none">Delivered</Badge>;
@@ -836,6 +837,7 @@ function OrdersContent() {
                   'Order Placed',
                   'Confirmed',
                   'Paid',
+                  'Hold',
                   'Ready for Delivery',
                   'Released for Delivery',
                   'Delivered',
@@ -904,12 +906,13 @@ function OrdersContent() {
       </div>
 
       {/* Status Tabs Row (Desktop only - Full Width Grid) */}
-      <div className="hidden md:grid md:grid-cols-8 gap-2 pb-2 border-b">
+      <div className="hidden md:grid md:grid-cols-9 gap-2 pb-2 border-b">
         {[
           { label: 'All', value: 'All' },
           { label: 'Placed', value: 'Order Placed' },
           { label: 'Confirmed', value: 'Confirmed' },
           { label: 'Paid', value: 'Paid' },
+          { label: 'Hold', value: 'Hold' },
           { label: 'Ready', value: 'Ready for Delivery' },
           { label: 'Released', value: 'Released for Delivery' },
           { label: 'Delivered', value: 'Delivered' },
@@ -1000,6 +1003,7 @@ function OrdersContent() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => handleBulkUpdate('Confirmed')}>Confirmed</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleBulkUpdate('Paid')}>Paid</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleBulkUpdate('Hold')}>Hold</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleBulkUpdate('Ready for Delivery')}>Ready for Delivery</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleBulkUpdate('Released for Delivery')}>Released for Delivery</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleBulkUpdate('Delivered')}>Delivered</DropdownMenuItem>
@@ -1232,6 +1236,7 @@ function OrdersContent() {
                             <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => updateStatus(order._id, 'Confirmed')}>Confirm</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => updateStatus(order._id, 'Paid', { paymentStatus: 'Paid' })}>Mark Paid</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateStatus(order._id, 'Hold')}>Hold Order</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => updateStatus(order._id, 'Ready for Delivery')}>Ready for Delivery</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => updateStatus(order._id, 'Released for Delivery')}>Release for Delivery</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => updateStatus(order._id, 'Delivered')}>Mark Delivered</DropdownMenuItem>
@@ -1360,6 +1365,7 @@ function OrdersContent() {
                         <SelectItem value="Order Placed" className="text-xs">Placed</SelectItem>
                         <SelectItem value="Confirmed" className="text-xs">Confirmed</SelectItem>
                         <SelectItem value="Paid" className="text-xs">Paid</SelectItem>
+                        <SelectItem value="Hold" className="text-xs">Hold</SelectItem>
                         <SelectItem value="Ready for Delivery" className="text-xs">Ready</SelectItem>
                         <SelectItem value="Released for Delivery" className="text-xs">Released</SelectItem>
                         <SelectItem value="Delivered" className="text-xs">Delivered</SelectItem>

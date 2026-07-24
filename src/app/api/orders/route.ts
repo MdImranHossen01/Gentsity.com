@@ -37,7 +37,7 @@ const orderSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'At least one item is required'),
   shippingAddress: z.object({
     fullName: z.string().min(2, 'Full name is required'),
-    phone: z.string().min(10, 'Invalid phone number'),
+    phone: z.string().min(1, 'Phone number is required'),
     email: z.string().email('Invalid email address'),
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
@@ -591,6 +591,7 @@ export async function GET(req: NextRequest) {
         'Order Placed': 0,
         'Confirmed': 0,
         'Paid': 0,
+        'Hold': 0,
         'Ready for Delivery': 0,
         'Released for Delivery': 0,
         'Delivered': 0,

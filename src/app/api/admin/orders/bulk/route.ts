@@ -4,7 +4,7 @@ import connectToDatabase from '@/lib/db';
 import Order from '@/models/Order';
 import { auth } from '@/auth';
 
-const ALLOWED_ORDER_STATUSES = ['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'];
+const ALLOWED_ORDER_STATUSES = ['Order Placed', 'Confirmed', 'Paid', 'Hold', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'];
 const ALLOWED_PAYMENT_STATUSES = ['Pending', 'Paid', 'Failed'];
 const MAX_BULK_IDS = 100;
 

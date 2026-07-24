@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     if (sessionUser?.user?.id) {
       queryConditions.push({ user: sessionUser.user.id });
     }
-    if (phone && phone.trim().length >= 11) {
+    if (phone && phone.trim().length >= 1) {
       queryConditions.push({ 'shippingAddress.phone': phone.trim() });
     }
 

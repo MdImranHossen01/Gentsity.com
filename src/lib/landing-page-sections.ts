@@ -71,7 +71,7 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
     icon: 'credit-card',
     defaultContent: {
       title: 'অর্ডার করতে নিচের ফর্মটি পূরণ করুন',
-      buttonText: 'অর্ডার নিশ্চিত করুন',
+      buttonText: 'অর্ডার কনফার্ম করুন',
       showQuantity: true,
       defaultQuantity: 1,
       paymentInstructions: 'ডেলিভারি ম্যানের কাছে টাকা পেমেন্ট করুন।',
