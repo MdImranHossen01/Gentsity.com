@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
         // --- Hashing & Normalization ---
         const hashedEmail = userData.em ? await hashData(userData.em) : undefined;
         
-        // Process phone: ensure digits only and has country code (BD: 88)
-        let phone = userData.ph ? userData.ph.replace(/\D/g, '') : '';
+        // Process phone: convert Bangla digits, ensure digits only and has country code (BD: 88)
+        let phone = userData.ph ? userData.ph.replace(/[০-৯]/g, (d: string) => '০১২৩৪৫৬৭৮৯'.indexOf(d).toString()).replace(/\D/g, '') : '';
         if (phone && !phone.startsWith('88')) {
             phone = '88' + phone;
         }
