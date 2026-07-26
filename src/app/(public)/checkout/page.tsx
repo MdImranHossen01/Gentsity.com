@@ -48,7 +48,7 @@ import {
 
 const checkoutSchema = z.object({
   fullName: z.string().min(2, 'নাম আবশ্যক'),
-  phone: z.string().min(1, 'মোবাইল নম্বর দিন'),
+  phone: z.string().min(11, 'সঠিক মোবাইল নম্বর দিন'),
   street: z.string().min(5, 'ঠিকানা আবশ্যক'),
   deliveryArea: z.enum(['inside', 'outside'], {
     message: 'ডেলিভারি এলাকা নির্বাচন করুন',
@@ -291,7 +291,7 @@ function CheckoutContent() {
   useEffect(() => {
     const checkPendingOrder = async () => {
       const query = new URLSearchParams();
-      if (watchedPhoneVal && watchedPhoneVal.trim().length >= 1) {
+      if (watchedPhoneVal && watchedPhoneVal.trim().length >= 11) {
         query.append('phone', watchedPhoneVal.trim());
       }
       try {
@@ -320,7 +320,7 @@ function CheckoutContent() {
 
   useEffect(() => {
     if (!isHydrated || items.length === 0 || submissionSucceededRef.current) return;
-    if (!watchedPhone || watchedPhone.trim().length < 1 || !watchedFullName || watchedFullName.trim().length < 2) return;
+    if (!watchedPhone || watchedPhone.trim().length < 11 || !watchedFullName || watchedFullName.trim().length < 2) return;
 
     const syncAbandonedCart = async () => {
       try {
@@ -567,7 +567,7 @@ function CheckoutContent() {
 
   // Validation check for mandatory fields to show/hide the order button
   const watchedFields = form.watch();
-  const isPhoneValid = (watchedFields.phone || '').trim().length >= 1;
+  const isPhoneValid = /^(?:01)[3-9]\d{8}$/.test(watchedFields.phone || '');
   const isAddressValid = (watchedFields.street || '').trim().length >= 5;
   const isNameValid = (watchedFields.fullName || '').trim().length >= 2;
   const isFormValid = !!(
