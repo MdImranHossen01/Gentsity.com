@@ -79,8 +79,23 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     const userId = session?.user?.id;
 
-    // Clean phone number (remove whitespace, formatting)
-    const cleanPhone = phone.replace(/\s+/g, '').trim();
+    // Normalize Bangla digits to English digits and sanitize phone
+    const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    let normalizedPhone = phone || '';
+    for (let i = 0; i < 10; i++) {
+      normalizedPhone = normalizedPhone.replace(new RegExp(banglaDigits[i], 'g'), englishDigits[i]);
+    }
+    let cleanedPhone = normalizedPhone.replace(/[^0-9]/g, '');
+    
+    // Remove country prefixes (88, +88, 0088) if present
+    if (cleanedPhone.startsWith('88')) {
+      cleanedPhone = cleanedPhone.substring(2);
+    } else if (cleanedPhone.startsWith('0088')) {
+      cleanedPhone = cleanedPhone.substring(4);
+    }
+    
+    const cleanPhone = cleanedPhone || phone.replace(/\s+/g, '').trim();
 
     // Check if an abandoned cart already exists for this phone number
     let cart = await AbandonedCart.findOne({ phone: cleanPhone });
