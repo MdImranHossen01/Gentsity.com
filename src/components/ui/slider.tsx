@@ -1,51 +1,23 @@
-"use client"
+import * as React from "react";
+import * as SliderPrimitive from "@radix-ui/react-slider";
 
-import * as React from "react"
-import { Slider as SliderPrimitive } from "@base-ui/react/slider"
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
+const Slider = React.forwardRef<
+  React.ElementRef<typeof SliderPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <SliderPrimitive.Root
+    ref={ref}
+    className={cn("relative flex w-full touch-none select-none items-center", className)}
+    {...props}
+  >
+    <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-primary/20">
+      <SliderPrimitive.Range className="absolute h-full bg-primary" />
+    </SliderPrimitive.Track>
+    <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
+  </SliderPrimitive.Root>
+));
+Slider.displayName = SliderPrimitive.Root.displayName;
 
-function Slider({
-  className,
-  value,
-  onValueChange,
-  ...props
-}: SliderPrimitive.Root.Props) {
-  return (
-    <SliderPrimitive.Root
-      data-slot="slider"
-      value={value}
-      onValueChange={onValueChange}
-      className={cn(
-        "relative flex w-full touch-none items-center select-none group data-[disabled]:opacity-50",
-        className
-      )}
-      {...props}
-    >
-      <SliderPrimitive.Control className="relative flex w-full items-center">
-        <SliderPrimitive.Track 
-          data-slot="slider-track"
-          className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-muted shadow-inner"
-        >
-          <SliderPrimitive.Indicator 
-              data-slot="slider-range"
-              className="absolute h-full bg-primary" 
-          />
-        </SliderPrimitive.Track>
-        
-        {/* Dynamic Thumb generation based on value array */}
-        {(Array.isArray(value) ? value : [value]).map((_, index) => (
-          <SliderPrimitive.Thumb
-              key={index}
-              index={index}
-              data-slot="slider-thumb"
-              className="block size-4 cursor-grab rounded-full border border-primary/50 bg-background shadow-lg transition-transform hover:scale-110 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing disabled:pointer-events-none dark:border-primary/40"
-          />
-        ))}
-      </SliderPrimitive.Control>
-    </SliderPrimitive.Root>
-  )
-}
-
-export { Slider }
-
+export { Slider };

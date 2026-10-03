@@ -1,6 +1,6 @@
 node_modules
-.next
-out
+.output
+dist
 .git
 .gitignore
 .github
@@ -10,3 +10,4 @@ README.md
 Dockerfile
 docker-compose.yml
 .npmrc
+bun.lock
