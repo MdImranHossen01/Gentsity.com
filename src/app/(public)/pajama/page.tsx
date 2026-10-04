@@ -55,49 +55,7 @@ export default function PajamaPage() {
   const [form, setForm] = useState({ name: '', phone: '', address: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const hasTrackedInitiate = useRef<string | null>(null);
-  useEffect(() => {
-    if (checkoutOpen && selected.length > 0) {
-      const activeIds = selected.map((p) => p._id).join(',');
-      if (hasTrackedInitiate.current !== activeIds) {
-        hasTrackedInitiate.current = activeIds;
-
-        const validItems = selected.map((p) => ({
-          id: p._id,
-          name: p.name,
-          quantity: picks[p._id] || 1,
-          item_price: p.price,
-        }));
-
-        const checkoutPayload = {
-          content_ids: selected.map((p) => p._id),
-          content_type: 'product',
-          value: total,
-          currency: 'BDT',
-          num_items: totalUnits,
-          contents: validItems,
-        };
-
-        const initiateUserData = { country: 'bd' };
-
-        waitForFbq().then(() => {
-          fbEvent('InitiateCheckout', checkoutPayload, initiateUserData);
-          ttEvent('InitiateCheckout', checkoutPayload, initiateUserData);
-        });
-
-        if (typeof window !== 'undefined' && (window as any).dataLayer) {
-          (window as any).dataLayer.push({
-            event: 'begin_checkout',
-            ecommerce: {
-              value: total,
-              currency: 'BDT',
-              items: validItems,
-            },
-          });
-        }
-      }
-    }
-  }, [checkoutOpen, selected, picks, total, totalUnits]);
+  
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [done, setDone] = useState<{ orderNo: string; total: number; deliveryCharge: number } | null>(null);
@@ -149,6 +107,51 @@ export default function PajamaPage() {
   const totalUnits = Object.values(picks).reduce((sum, qty) => sum + qty, 0);
   const subtotal = selected.reduce((sum, p) => sum + p.price * (picks[p._id] ?? 0), 0);
   const total = subtotal + deliveryCharge;
+
+  const hasTrackedInitiate = useRef<string | null>(null);
+  useEffect(() => {
+    if (checkoutOpen && selected.length > 0) {
+      const activeIds = selected.map((p) => p._id).join(',');
+      if (hasTrackedInitiate.current !== activeIds) {
+        hasTrackedInitiate.current = activeIds;
+
+        const validItems = selected.map((p) => ({
+          id: p._id,
+          name: p.name,
+          quantity: picks[p._id] || 1,
+          item_price: p.price,
+        }));
+
+        const checkoutPayload = {
+          content_ids: selected.map((p) => p._id),
+          content_type: 'product',
+          value: total,
+          currency: 'BDT',
+          num_items: totalUnits,
+          contents: validItems,
+        };
+
+        const initiateUserData = { country: 'bd' };
+
+        waitForFbq().then(() => {
+          fbEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+          ttEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+        });
+
+        if (typeof window !== 'undefined' && (window as any).dataLayer) {
+          (window as any).dataLayer.push({
+            event: 'begin_checkout',
+            ecommerce: {
+              value: total,
+              currency: 'BDT',
+              items: validItems,
+            },
+          });
+        }
+      }
+    }
+  }, [checkoutOpen, selected, picks, total, totalUnits]);
+
 
   const orderProduct = (product: PajamaProduct) => {
     setPicks({ [product._id]: 1 });
