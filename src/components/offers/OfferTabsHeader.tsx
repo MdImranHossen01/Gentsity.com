@@ -1,53 +1,10 @@
 ﻿'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 export default function OfferTabsHeader() {
-  const pathname = usePathname();
-  const isPolo = pathname === '/polo-combo';
-  const isPajama = pathname === '/pajama';
-  const isSneakers = pathname === '/sneakers';
-
   return (
     <>
-      {/* 3-Pill Switcher Tabs */}
-      <nav className="border-b border-gray-200/80 bg-white sticky top-9 z-30 shadow-xs">
-        <div className="mx-auto flex max-w-5xl items-center justify-center gap-2 overflow-x-auto px-4 py-2">
-          <Link
-            href="/polo-combo"
-            className={`rounded-full px-5 py-1 text-sm font-bold transition-all ${
-              isPolo
-                ? 'border border-[#18483b] bg-[#18483b] text-white shadow-xs'
-                : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-400'
-            }`}
-          >
-            পোলো শার্ট
-          </Link>
-          <Link
-            href="/pajama"
-            className={`rounded-full px-5 py-1 text-sm font-bold transition-all ${
-              isPajama
-                ? 'border border-[#18483b] bg-[#18483b] text-white shadow-xs'
-                : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-400'
-            }`}
-          >
-            পায়জামা
-          </Link>
-          <Link
-            href="/sneakers"
-            className={`rounded-full px-5 py-1 text-sm font-bold transition-all ${
-              isSneakers
-                ? 'border border-[#18483b] bg-[#18483b] text-white shadow-xs'
-                : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-400'
-            }`}
-          >
-            স্নিকার্স
-          </Link>
-        </div>
-      </nav>
-
       {/* Floating WhatsApp Button */}
       <a
         href="https://wa.me/8801700000000?text=%E0%A6%B9%E0%A7%8D%E0%A6%AF%E0%A6%BE%E0%A6%B2%E0%A7%8B%20Gentsity%2C%20%E0%A6%86%E0%A6%AE%E0%A6%BF%20%E0%A6%8F%E0%A6%95%E0%A6%9F%E0%A6%BF%20%E0%A6%AA%E0%A7%8D%E0%A6%B0%E0%A7%8B%E0%A6%A1%E0%A6%BE%E0%A6%95%E0%A7%8D%E0%A6%9F%20%E0%A6%B8%E0%A6%AE%E0%A7%8D%E0%A6%AA%E0%A6%B0%E0%A7%8D%E0%A6%95%E0%A7%87%20%E0%A6%9C%E0%A6%BE%E0%A6%A8%E0%A6%A4%E0%A7%87%20%E0%A6%9A%E0%A6%BE%E0%A6%87%E0%A7%84"
