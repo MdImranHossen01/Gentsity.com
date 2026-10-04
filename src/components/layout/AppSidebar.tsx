@@ -71,6 +71,10 @@ const data = {
           title: "Categories",
           url: "/admin/categories",
         },
+        {
+          title: "Combo & Offers",
+          url: "/admin/combos",
+        },
       ],
     },
     {

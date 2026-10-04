@@ -51,6 +51,9 @@ import Swal from 'sweetalert2';
 
 const navItems = [
   { href: '/', label: 'Home' },
+  { href: '/polo-combo', label: '🔥 ৫ পিস কম্বো' },
+  { href: '/pajama', label: 'পায়জামা' },
+  { href: '/sneakers', label: 'স্নিকার্স' },
   { href: '/shop', label: 'Shop' },
   { href: '/blog', label: 'Blogs' },
   { href: '/contact', label: 'Contact' },

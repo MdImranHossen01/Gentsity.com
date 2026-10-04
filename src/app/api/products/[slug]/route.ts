@@ -53,7 +53,7 @@ export async function PUT(
     const allowedFields = [
       'name', 'slug', 'description', 'price', 'salePrice', 'discountRate',
       'sku', 'stock', 'categories', 'tags', 'images',
-      'attributes', 'variants', 'isFeatured', 'isNewArrival', 'isPublished', 'deliveryCharge'
+      'attributes', 'variants', 'isFeatured', 'isNewArrival', 'isPublished', 'deliveryCharge', 'purchasePrice'
     ];
     const safeUpdate: any = {};
 
@@ -128,7 +128,7 @@ export async function PUT(
             return NextResponse.json({ message: 'Product not found' }, { status: 404 });
           }
 
-          revalidateTag(CACHE_TAGS.products, 'max');
+          revalidateTag(CACHE_TAGS.products);
           revalidatePath('/');
           return NextResponse.json(updatedProduct);
         } catch (error: any) {
@@ -160,7 +160,7 @@ export async function PUT(
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
 
-    revalidateTag('products', 'max');
+    revalidateTag('products');
 
     return NextResponse.json(updatedProduct);
   } catch (error) {
@@ -195,7 +195,7 @@ export async function DELETE(
     }
 
     try {
-      await revalidateTag(CACHE_TAGS.products, 'max');
+      await revalidateTag(CACHE_TAGS.products);
     } catch (revalidateError) {
       console.error('Failed to revalidate product tags:', revalidateError);
     }
