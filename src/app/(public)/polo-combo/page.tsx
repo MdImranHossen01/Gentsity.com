@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import OfferTabsHeader from '@/components/offers/OfferTabsHeader';
+import { fbEvent } from '@/lib/fpixel';
+import { ttEvent } from '@/lib/tiktok';
 
 const SIZES = ['M', 'L', 'XL', 'XXL'] as const;
 type Size = (typeof SIZES)[number];
@@ -22,12 +24,73 @@ interface Variant {
   sizeStock: { size: string; stock: number }[];
 }
 
+
+const waitForFbq = (maxWaitMs = 5000, intervalMs = 200) =>
+  new Promise<void>((resolve) => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      resolve();
+      return;
+    }
+    let elapsed = 0;
+    const timer = setInterval(() => {
+      elapsed += intervalMs;
+      if ((typeof window !== 'undefined' && (window as any).fbq) || elapsed >= maxWaitMs) {
+        clearInterval(timer);
+        resolve();
+      }
+    }, intervalMs);
+  });
+
 export default function PoloComboPage() {
   const [size, setSize] = useState<Size | null>('M');
   const [picks, setPicks] = useState<Record<string, number>>({});
   const [form, setForm] = useState({ name: '', phone: '', address: '' });
   const [deliveryArea, setDeliveryArea] = useState<'dhaka' | 'outside'>('outside');
   const [submitting, setSubmitting] = useState(false);
+
+  const hasTrackedInitiate = useRef(false);
+  useEffect(() => {
+    if (size && totalPicked === comboQty && !hasTrackedInitiate.current) {
+      hasTrackedInitiate.current = true;
+      const validItems = Object.entries(picks).map(([variantId, qty]) => {
+        const v = variants.find((item) => item._id === variantId);
+        return {
+          id: variantId,
+          name: v?.name || `পোলো শার্ট (${v?.colorName || size})`,
+          quantity: qty,
+          item_price: Math.round(price / comboQty),
+        };
+      });
+
+      const checkoutPayload = {
+        content_ids: ['polo-combo', ...Object.keys(picks)],
+        content_type: 'product',
+        value: grandTotal,
+        currency: 'BDT',
+        num_items: comboQty,
+        contents: validItems,
+      };
+
+      const initiateUserData = { country: 'bd' };
+
+      waitForFbq().then(() => {
+        fbEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+        ttEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+      });
+
+      if (typeof window !== 'undefined' && (window as any).dataLayer) {
+        (window as any).dataLayer.push({
+          event: 'begin_checkout',
+          ecommerce: {
+            value: grandTotal,
+            currency: 'BDT',
+            items: validItems,
+          },
+        });
+      }
+    }
+  }, [size, totalPicked, comboQty, picks, grandTotal, variants, price]);
+
   const [done, setDone] = useState<{ orderNo: string; total: number } | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,6 +236,55 @@ export default function PoloComboPage() {
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || 'অর্ডার প্রক্রিয়া করা যায়নি।');
+      }
+
+      
+      // Track Purchase event immediately on API success
+      try {
+        const fullName = form.name.trim();
+        const nameParts = fullName.split(/\s+/);
+        const purchaseEventData = {
+          value: data.total || grandTotal,
+          currency: 'BDT',
+          content_ids: orderItems.map((i: any) => i.comboId || i.id || 'polo-item'),
+          content_type: 'product',
+          num_items: orderItems.length,
+          contents: orderItems.map((i: any) => ({
+            id: i.comboId || i.id || 'polo-item',
+            quantity: i.quantity,
+            item_price: i.price,
+          })),
+        };
+
+        const purchaseUserData: any = {
+          ph: cleanPhone,
+          fn: nameParts[0] || '',
+          ln: nameParts.slice(1).join(' ') || '',
+          country: 'bd',
+        };
+
+        if (deliveryArea === 'dhaka') {
+          purchaseUserData.ct = 'Dhaka';
+          purchaseUserData.st = 'Dhaka';
+        }
+
+        const trackId = data.orderNo || data.orderId || `GEN-${Date.now()}`;
+        fbEvent('Purchase', purchaseEventData, purchaseUserData, trackId);
+        ttEvent('Purchase', purchaseEventData, purchaseUserData, trackId);
+
+        if (typeof window !== 'undefined' && (window as any).dataLayer) {
+          (window as any).dataLayer.push({
+            event: 'purchase',
+            ecommerce: {
+              transaction_id: trackId,
+              value: purchaseEventData.value,
+              currency: 'BDT',
+              items: purchaseEventData.contents,
+            },
+          });
+        }
+      } catch (trackingError) {
+        console.error('[Tracking Error]:', trackingError);
       }
 
       setDone({ orderNo: data.orderNo, total: data.total || grandTotal });

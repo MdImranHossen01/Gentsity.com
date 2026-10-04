@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Check, Flame, Ruler, ShieldCheck, Sparkles, Truck, Wallet } from 'lucide-react';
@@ -16,6 +16,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import OfferTabsHeader from '@/components/offers/OfferTabsHeader';
+import { fbEvent } from '@/lib/fpixel';
+import { ttEvent } from '@/lib/tiktok';
 
 const SIZES = ['40', '41', '42', '43', '44'] as const;
 type Size = (typeof SIZES)[number];
@@ -28,12 +30,74 @@ interface SneakerProduct {
   sizeStock: { size: string; stock: number }[];
 }
 
+
+const waitForFbq = (maxWaitMs = 5000, intervalMs = 200) =>
+  new Promise<void>((resolve) => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      resolve();
+      return;
+    }
+    let elapsed = 0;
+    const timer = setInterval(() => {
+      elapsed += intervalMs;
+      if ((typeof window !== 'undefined' && (window as any).fbq) || elapsed >= maxWaitMs) {
+        clearInterval(timer);
+        resolve();
+      }
+    }, intervalMs);
+  });
+
 export default function SneakersPage() {
   const [size, setSize] = useState<Size | null>(null);
   const [picks, setPicks] = useState<Record<string, number>>({});
   const [deliveryArea, setDeliveryArea] = useState<'dhaka' | 'outside'>('outside');
   const [form, setForm] = useState({ name: '', phone: '', address: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  const hasTrackedInitiate = useRef<string | null>(null);
+  useEffect(() => {
+    if (checkoutOpen && selected.length > 0) {
+      const activeIds = selected.map((p) => p._id).join(',');
+      if (hasTrackedInitiate.current !== activeIds) {
+        hasTrackedInitiate.current = activeIds;
+
+        const validItems = selected.map((p) => ({
+          id: p._id,
+          name: p.name,
+          quantity: picks[p._id] || 1,
+          item_price: p.price,
+        }));
+
+        const checkoutPayload = {
+          content_ids: selected.map((p) => p._id),
+          content_type: 'product',
+          value: total,
+          currency: 'BDT',
+          num_items: totalUnits,
+          contents: validItems,
+        };
+
+        const initiateUserData = { country: 'bd' };
+
+        waitForFbq().then(() => {
+          fbEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+          ttEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+        });
+
+        if (typeof window !== 'undefined' && (window as any).dataLayer) {
+          (window as any).dataLayer.push({
+            event: 'begin_checkout',
+            ecommerce: {
+              value: total,
+              currency: 'BDT',
+              items: validItems,
+            },
+          });
+        }
+      }
+    }
+  }, [checkoutOpen, selected, picks, total, totalUnits]);
+
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [done, setDone] = useState<{ orderNo: string; total: number; deliveryCharge: number } | null>(null);
   const [products, setProducts] = useState<SneakerProduct[]>([]);
@@ -139,6 +203,56 @@ export default function SneakersPage() {
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || 'অর্ডার প্রক্রিয়া করা যায়নি।');
+      }
+
+      
+      // Track Purchase event immediately on API success
+      try {
+        const fullName = form.name.trim();
+        const nameParts = fullName.split(/\s+/);
+        const purchaseEventData = {
+          value: data.total || total,
+          currency: 'BDT',
+          content_ids: orderItems.map((i: any) => i.comboId || i.id || 'sneakers-item'),
+          content_type: 'product',
+          num_items: orderItems.length,
+          contents: orderItems.map((i: any) => ({
+            id: i.comboId || i.id || 'sneakers-item',
+            name: i.name,
+            quantity: i.quantity,
+            item_price: i.price,
+          })),
+        };
+
+        const purchaseUserData: any = {
+          ph: cleanPhone,
+          fn: nameParts[0] || '',
+          ln: nameParts.slice(1).join(' ') || '',
+          country: 'bd',
+        };
+
+        if (deliveryArea === 'dhaka') {
+          purchaseUserData.ct = 'Dhaka';
+          purchaseUserData.st = 'Dhaka';
+        }
+
+        const trackId = data.orderNo || data.orderId || `GEN-${Date.now()}`;
+        fbEvent('Purchase', purchaseEventData, purchaseUserData, trackId);
+        ttEvent('Purchase', purchaseEventData, purchaseUserData, trackId);
+
+        if (typeof window !== 'undefined' && (window as any).dataLayer) {
+          (window as any).dataLayer.push({
+            event: 'purchase',
+            ecommerce: {
+              transaction_id: trackId,
+              value: purchaseEventData.value,
+              currency: 'BDT',
+              items: purchaseEventData.contents,
+            },
+          });
+        }
+      } catch (trackingError) {
+        console.error('[Tracking Error]:', trackingError);
       }
 
       setDone({ orderNo: data.orderNo, total: data.total || total, deliveryCharge });
