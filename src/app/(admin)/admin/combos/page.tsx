@@ -316,10 +316,13 @@ export default function AdminCombosPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 max-w-lg">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-2xl bg-muted/60 p-1">
           <TabsTrigger value="polo">পোলো শার্ট কম্বো</TabsTrigger>
           <TabsTrigger value="pajama">চায়না পায়জামা</TabsTrigger>
           <TabsTrigger value="sneakers">প্রিমিয়াম স্নিকার্স</TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center justify-center gap-1.5 font-bold">
+            <Settings className="h-4 w-4 text-amber-600" /> ডেলিভারি ও সেটিংস
+          </TabsTrigger>
         </TabsList>
 
         {/* 1. POLO COMBO TAB */}
