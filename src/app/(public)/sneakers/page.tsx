@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import { Check, Flame, KeyRound, Ruler, ShieldCheck, Sparkles, Truck, Wallet } from 'lucide-react';
+import { Check, Flame, Ruler, ShieldCheck, Sparkles, Truck, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,20 +15,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import OfferTabsHeader from '@/components/offers/OfferTabsHeader';
 
-const SIZES = ['M', 'L', 'XL', 'XXL'] as const;
+const SIZES = ['40', '41', '42', '43', '44'] as const;
 type Size = (typeof SIZES)[number];
 
-interface PajamaProduct {
+interface SneakerProduct {
   _id: string;
   name: string;
-  productKind: 'single' | 'combo';
   price: number;
   imageUrl?: string;
   sizeStock: { size: string; stock: number }[];
 }
 
-export default function PajamaPage() {
+export default function SneakersPage() {
   const [size, setSize] = useState<Size | null>(null);
   const [picks, setPicks] = useState<Record<string, number>>({});
   const [deliveryArea, setDeliveryArea] = useState<'dhaka' | 'outside'>('outside');
@@ -36,30 +36,45 @@ export default function PajamaPage() {
   const [submitting, setSubmitting] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [done, setDone] = useState<{ orderNo: string; total: number; deliveryCharge: number } | null>(null);
-  const [products, setProducts] = useState<PajamaProduct[]>([]);
+  const [products, setProducts] = useState<SneakerProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const freeDelivery = false;
-  const dhakaCharge = 70;
-  const outsideCharge = 120;
+  const [settings, setSettings] = useState({
+    sneakers_free_delivery: 'off',
+    sneakers_delivery_charge_dhaka: 80,
+    sneakers_delivery_charge_outside: 130,
+  });
+
+  useEffect(() => {
+    fetch('/api/combos/settings')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.settings) setSettings(d.settings);
+      })
+      .catch(() => {});
+  }, []);
+
+  const freeDelivery = settings.sneakers_free_delivery === 'on';
+  const dhakaCharge = Math.max(0, Number(settings.sneakers_delivery_charge_dhaka) || 80);
+  const outsideCharge = Math.max(0, Number(settings.sneakers_delivery_charge_outside) || 130);
   const deliveryCharge = freeDelivery ? 0 : deliveryArea === 'dhaka' ? dhakaCharge : outsideCharge;
 
   useEffect(() => {
-    async function fetchPajamas() {
+    async function fetchSneakers() {
       try {
         setLoading(true);
-        const res = await fetch('/api/combos?category=pajama');
+        const res = await fetch('/api/combos?category=sneakers');
         const data = await res.json();
         if (data.success && Array.isArray(data.items)) {
           setProducts(data.items);
         }
       } catch (err) {
-        console.error('Failed to load pajama products:', err);
+        console.error('Failed to load sneakers:', err);
       } finally {
         setLoading(false);
       }
     }
-    fetchPajamas();
+    fetchSneakers();
   }, []);
 
   const selected = useMemo(
@@ -70,7 +85,7 @@ export default function PajamaPage() {
   const subtotal = selected.reduce((sum, p) => sum + p.price * (picks[p._id] ?? 0), 0);
   const total = subtotal + deliveryCharge;
 
-  const orderProduct = (product: PajamaProduct) => {
+  const orderProduct = (product: SneakerProduct) => {
     setPicks({ [product._id]: 1 });
     setCheckoutOpen(true);
   };
@@ -116,7 +131,7 @@ export default function PajamaPage() {
           deliveryArea,
           deliveryCharge,
           totalAmount: total,
-          offerType: 'pajama',
+          offerType: 'sneakers',
           items: orderItems,
         }),
       });
@@ -140,7 +155,9 @@ export default function PajamaPage() {
   };
 
   return (
-    <div className="pb-16">
+    <div className="min-h-screen bg-[#FAF8F5] pb-16">
+      <OfferTabsHeader />
+
       {done ? (
         <section className="mx-auto max-w-3xl px-4 py-16">
           <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
@@ -161,20 +178,20 @@ export default function PajamaPage() {
         </section>
       ) : (
         <>
-          <section className="mx-auto max-w-4xl px-4 pb-6 pt-9 text-center">
-            <p className="text-sm font-bold tracking-wider text-[#18483b]">GENTSITY PAJAMA COLLECTION</p>
+          <section className="mx-auto max-w-4xl px-4 pb-6 pt-8 text-center">
+            <p className="text-sm font-bold tracking-wider text-[#18483b]">GENTSITY SNEAKERS COLLECTION</p>
             <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl text-gray-900 leading-tight">
-              <Flame className="inline h-7 w-7 text-red-600 mb-1" /> চায়না মাইক্রো স্টিচ ফেব্রিকের প্রিমিয়াম পায়জামা <Flame className="inline h-7 w-7 text-red-600 mb-1" />
+              <Flame className="inline h-7 w-7 text-red-600 mb-1" /> প্রিমিয়াম স্নিকার্স <Flame className="inline h-7 w-7 text-red-600 mb-1" />
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-gray-600">
-              আরাম, স্মার্ট লুক আর প্রিমিয়াম কোয়ালিটি—সবকিছু একসাথে! <Sparkles className="inline h-4 w-4 text-[#18483b]" />
+              দেখতে স্মার্ট, ব্যবহারে কমফোর্টেবল — প্রতিদিনের জন্য পারফেক্ট জুতা! <Sparkles className="inline h-4 w-4 text-[#18483b]" />
             </p>
 
-            {/* Pajama Hero Banner */}
+            {/* Sneakers Hero Banner */}
             <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-xs">
               <Image
-                src="/assets/images/Banner/pajamapagebanner.webp"
-                alt="Gentsity পায়জামা — আরামদায়ক ফিট"
+                src="/assets/images/Banner/sneakersbanner.webp"
+                alt="Gentsity স্নিকার্স — স্টাইল আর কমফোর্টের গ্যারেন্টি"
                 width={1200}
                 height={600}
                 priority
@@ -182,79 +199,34 @@ export default function PajamaPage() {
               />
             </div>
 
-            {/* Feature Check List */}
-            <ul className="mx-auto mt-7 grid max-w-2xl gap-3 text-left text-sm font-medium text-gray-700 md:grid-cols-2">
-              <li className="flex items-start gap-2.5">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> প্রিমিয়াম কোয়ালিটি চায়না মাইক্রো স্টিচ ফেব্রিক
-              </li>
-              <li className="flex items-start gap-2.5">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> সফট, আরামদায়ক ও টেকসই
-              </li>
-              <li className="flex items-start gap-2.5">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> Semi Narrow Pant Cutting – স্মার্ট ও কমফোর্টেবল ফিট
-              </li>
-              <li className="flex items-start gap-2.5">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> পুরোপুরি স্কিনি নয়, তাই চলাফেরায় আরাম
-              </li>
-              <li className="flex items-start gap-2.5">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> অফিস, ক্যাজুয়াল ও ডেইলি ওয়্যারের জন্য পারফেক্ট
-              </li>
-              <li className="flex items-start gap-2.5">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> আয়রন করার ঝামেলা নেই – সবসময় স্মার্ট লুক
-              </li>
-            </ul>
-
-            {/* Semi Narrow Cutting Box */}
-            <div className="mt-6 rounded-2xl bg-[#EDE8E1]/60 border border-[#E0D8CD] p-5 text-left text-sm">
-              <h2 className="mb-2 font-bold text-gray-900 flex items-center gap-1.5">
-                <KeyRound className="inline h-4 w-4 text-[#18483b]" /> Semi Narrow Cutting-এর বিশেষত্ব:
+            {/* Why buy this box */}
+            <div className="mt-6 rounded-2xl border border-gray-200/90 bg-white p-5 text-left text-sm shadow-2xs">
+              <h2 className="mb-3 font-bold text-gray-900 flex items-center gap-1.5 text-base">
+                <Flame className="inline h-5 w-5 text-red-600" /> কেন এই প্রোডাক্ট নিবেন?
               </h2>
-              <ul className="list-disc space-y-1 pl-5 text-gray-700 font-medium">
-                <li>কোমর থেকে হাঁটু পর্যন্ত নরমাল ফিট</li>
-                <li>হাঁটু থেকে নিচে হালকা টেপার্ড</li>
-                <li>স্মার্ট লুকের সাথে সর্বোচ্চ কমফোর্ট</li>
+              <ul className="space-y-2.5 text-gray-700 font-medium">
+                <li className="flex items-start gap-2.5">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> প্রিমিয়াম ফিনিশিং — দেখতে smart, ব্যবহারেও comfortable
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> Daily use, casual outing এবং smart look-এর জন্য perfect
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> Available sizes: 40, 41, 42, 43, 44
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-[#18483b]" /> Cash on Delivery সুবিধা
+                </li>
               </ul>
             </div>
 
-            {/* 4 Key Details */}
-            <div className="mt-6 rounded-2xl border border-gray-200/90 bg-white p-5 text-left text-sm shadow-2xs">
-              <h2 className="mb-3 font-bold text-gray-900 flex items-center gap-1.5 text-base">
-                <Flame className="inline h-5 w-5 text-red-600" /> আমাদের পায়জামার বিশেষ বৈশিষ্ট্য
-              </h2>
-              <ol className="list-decimal space-y-2.5 pl-5 text-gray-700 leading-relaxed font-medium">
-                <li>
-                  <strong className="text-gray-900">প্রিমিয়াম চায়না মাইক্রো স্টিচ ফেব্রিক:</strong> উন্নতমানের চায়না মাইক্রো স্টিচ ফেব্রিক দিয়ে তৈরি। কাপড়ে ভাঁজ কম পড়ে, তাই বারবার আয়রন করার ঝামেলা নেই।
-                </li>
-                <li>
-                  <strong className="text-gray-900">প্রিমিয়াম মেটাল জিপার:</strong> গেট ও পিছনের পকেটে ব্যবহার করা হয়েছে মজবুত মেটাল জিপার, যা পায়জামাকে দিয়েছে প্রিমিয়াম লুক ও দীর্ঘস্থায়িত্ব।
-                </li>
-                <li>
-                  <strong className="text-gray-900">পকেটেও একই ফেব্রিক:</strong> পকেটের জন্য আলাদা কোনো ফেব্রিক ব্যবহার করা হয়নি। পায়জামায় ব্যবহৃত মূল ফেব্রিকই পকেটেও ব্যবহার করা হয়েছে, ফলে কোয়ালিটি ও আরাম দুটোই বজায় থাকে।
-                </li>
-                <li>
-                  <strong className="text-gray-900">মেটাল ড্রস্ট্রিং ও প্রিমিয়াম আইলেট:</strong> পায়জামায় ব্যবহার করা হয়েছে মজবুত মেটাল ড্রস্ট্রিং এবং ড্রস্ট্রিংয়ের জন্য প্রিমিয়াম আইলেট, যা পায়জামার ফিনিশিং ও স্থায়িত্ব আরও বাড়িয়ে দেয়।
-                </li>
-              </ol>
-            </div>
-
             <p className="mt-7 text-base font-extrabold text-gray-900">
-              <Ruler className="inline h-5 w-5 text-[#18483b] mr-1" /> সাইজ: M – 38 | L – 40 | XL – 42 | XXL – 44
+              <Ruler className="inline h-5 w-5 text-[#18483b] mr-1" /> সাইজ: 40 | 41 | 42 | 43 | 44
             </p>
-
-            {/* Size Chart Banner */}
-            <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-xs">
-              <Image
-                src="/assets/images/Banner/pajamasize.webp"
-                alt="Gentsity সেমি ন্যারো পায়জামা সাইজ চার্ট"
-                width={1200}
-                height={600}
-                className="w-full h-auto object-cover"
-              />
-            </div>
 
             <ul className="mt-6 flex flex-wrap justify-center gap-6 text-sm font-semibold text-gray-700">
               <li className="flex items-center gap-2">
-                <Truck className="h-4 w-4 text-[#18483b]" /> সারা বাংলাদেশে ডেলিভারি
+                <Truck className="h-4 w-4 text-[#18483b]" /> {freeDelivery ? 'সারা বাংলাদেশে ফ্রি ডেলিভারি' : 'সারা বাংলাদেশে ডেলিভারি'}
               </li>
               <li className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-[#18483b]" /> হাতে পেয়ে টাকা দিন
@@ -262,13 +234,13 @@ export default function PajamaPage() {
             </ul>
           </section>
 
-          {/* Products Grid */}
+          {/* Sneakers Grid */}
           <main className="mx-auto max-w-6xl px-4 pb-16">
             {loading ? (
               <p className="py-12 text-center text-sm font-medium text-gray-500">প্রোডাক্ট লোড হচ্ছে…</p>
             ) : products.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
-                পায়জামার প্রোডাক্ট শিগগিরই আসছে।
+                স্নিকার্স প্রোডাক্ট শিগগিরই আসছে।
               </p>
             ) : (
               <div className="mx-auto grid w-full grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-4">
@@ -296,7 +268,7 @@ export default function PajamaPage() {
                           </div>
                         )}
                         <span className="absolute left-2.5 top-2.5 rounded-lg bg-white/90 backdrop-blur-xs px-2.5 py-1 text-xs font-bold text-gray-800 shadow-xs">
-                          {product.productKind === 'combo' ? '২ পিস কম্বো' : 'সিঙ্গেল পিস'}
+                          স্নিকার্স
                         </span>
                         {qty > 0 && (
                           <span className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-[#18483b] text-white shadow-xs">
@@ -323,33 +295,52 @@ export default function PajamaPage() {
               </div>
             )}
 
-            {/* Policy & Delivery Info */}
-            <div className="mx-auto mt-10 max-w-3xl space-y-2 rounded-2xl border border-red-200 bg-red-50/50 p-5 text-left text-sm text-gray-700 font-medium">
-              <p>সারা বাংলাদেশে ক্যাশ অন ডেলিভারি সুবিধা।</p>
-              <p>– কেয়ার নির্দেশনা: হালকা ডিটারজেন্টে ধোয়া, ব্লিচ ব্যবহার নয়।</p>
-              <p>
-                প্রডাক্ট হাতে পাওয়ার পর ডেলিভারি রাইডার এর সামনে চেক করে নিবেন স্যার। কোন সমস্যা থাকলে আমাদের জানাবেন স্যার। রাইডার চলে যাওয়ার পর কোন অভিযোগ গ্রহণ করা হবে না স্যার।
-              </p>
-              <p className="font-bold text-red-600">
-                বি: দ্র: অর্ডার করার সময় সাইজ শিওর হয়ে নিবেন। সাইজ নিয়ে সমস্যা জানালে কুরিয়ার চার্জ দিয়ে সাইজ এক্সচেঞ্জ করতে হবে। NB: কোন কারনে প্রডাক্ট রির্টান করলে ডেলিভারি চার্জ দিয়ে রির্টান করতে হবে।
-              </p>
-            </div>
+            {/* Return & Refund Policies */}
+            <section className="mx-auto mt-10 max-w-3xl space-y-4 text-left text-sm">
+              <div className="rounded-2xl border border-gray-200/90 bg-white p-5 shadow-2xs">
+                <h2 className="mb-2 font-bold text-gray-900 text-base">রিটার্ন শর্তাবলী</h2>
+                <ul className="list-disc space-y-1.5 pl-5 text-gray-700 font-medium">
+                  <li>Product পছন্দ না হলে delivery man-কে delivery charge pay করে return করতে হবে।</li>
+                  <li>Product-এ ফাটা, দাগ, damage, নষ্ট অথবা ভুল product হলে return করার সময় delivery charge লাগবে না।</li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200/90 bg-white p-5 shadow-2xs">
+                <h2 className="mb-2 font-bold text-gray-900 text-base">রিটার্ন ও রিফান্ড নীতিমালা</h2>
+                <ul className="list-disc space-y-1.5 pl-5 text-gray-700 font-medium leading-relaxed">
+                  <li>রিটার্ন/এক্সচেঞ্জের জন্য পণ্যটি ব্যবহার না করা, পরিষ্কার এবং সম্ভব হলে original box/packaging-সহ থাকতে হবে।</li>
+                  <li>ভুল, ক্ষতিগ্রস্ত বা ত্রুটিপূর্ণ পণ্য পেলে যত দ্রুত সম্ভব আমাদের ফোন/WhatsApp-এ যোগাযোগ করুন। যাচাই সাপেক্ষে replacement বা return ব্যবস্থা করা হবে।</li>
+                  <li>Size change, পছন্দ পরিবর্তন বা personal preference-এর কারণে return/exchange হলে delivery/courier charge গ্রাহক বহন করবেন।</li>
+                  <li>ব্যবহৃত, নোংরা, ইচ্ছাকৃতভাবে ক্ষতিগ্রস্ত বা resale condition-এ নেই — এমন পণ্য return/refund-এর জন্য গ্রহণযোগ্য নাও হতে পারে।</li>
+                </ul>
+              </div>
+            </section>
           </main>
 
           {/* Checkout Dialog */}
           <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-            <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg bg-white rounded-2xl p-6">
-              <DialogHeader>
+            <DialogContent className="max-h-[92vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 sm:p-6">
+              <DialogHeader className="text-left">
                 <DialogTitle className="text-xl font-bold text-gray-900">অর্ডার সম্পন্ন করুন</DialogTitle>
                 <DialogDescription className="text-gray-500">
-                  সাইজ, ঠিকানা ও মোবাইল নম্বর দিয়ে অর্ডারটি কনফার্ম করুন।
+                  সাইজ ও ঠিকানা দিয়ে অর্ডারটি কনফার্ম করুন।
                 </DialogDescription>
               </DialogHeader>
 
-              <form onSubmit={handleOrder} className="space-y-4 mt-2">
-                <div>
+              <form onSubmit={handleOrder} className="mt-3">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-[#FAF8F5] border border-gray-200/70 p-3.5">
+                  <div className="min-w-0">
+                    {selected.map((product) => (
+                      <p key={product._id} className="truncate font-bold text-gray-900">{product.name}</p>
+                    ))}
+                    <p className="text-xs text-gray-500 font-medium">{totalUnits}টি প্রোডাক্ট</p>
+                  </div>
+                  <span className="shrink-0 text-lg font-extrabold text-[#18483b]">৳{subtotal}</span>
+                </div>
+
+                <div className="mt-4">
                   <Label className="text-sm font-bold text-gray-700">আপনার সাইজ *</Label>
-                  <div className="mt-2 grid grid-cols-4 gap-2">
+                  <div className="mt-2 grid grid-cols-5 gap-2">
                     {SIZES.map((option) => (
                       <Button
                         key={option}
@@ -367,11 +358,11 @@ export default function PajamaPage() {
                 </div>
 
                 {freeDelivery ? (
-                  <p className="rounded-xl bg-[#18483b]/10 px-3 py-2 text-sm font-bold text-[#18483b]">
+                  <p className="mt-4 rounded-xl bg-[#18483b]/10 px-3 py-2 text-sm font-bold text-[#18483b]">
                     সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚
                   </p>
                 ) : (
-                  <div>
+                  <div className="mt-4">
                     <Label className="text-sm font-bold text-gray-700">ডেলিভারি এরিয়া *</Label>
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <Button
@@ -398,58 +389,53 @@ export default function PajamaPage() {
                   </div>
                 )}
 
-                <div className="grid gap-2">
-                  <Label htmlFor="pj-name" className="text-sm font-bold text-gray-700">আপনার নাম</Label>
-                  <Input
-                    id="pj-name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="যেমন: রাকিব হাসান"
-                    className="h-11"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="pj-phone" className="text-sm font-bold text-gray-700">মোবাইল নম্বর *</Label>
-                  <Input
-                    id="pj-phone"
-                    required
-                    inputMode="numeric"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="01XXXXXXXXX"
-                    className="h-11 font-mono"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="pj-address" className="text-sm font-bold text-gray-700">
-                    আপনার সম্পূর্ণ ঠিকানা লিখুন, থানা, জেলাসহ
-                  </Label>
-                  <Textarea
-                    id="pj-address"
-                    rows={3}
-                    required
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    placeholder="বাসা/রোড, থানা, জেলা"
-                  />
+                <div className="mt-4 grid gap-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="sn-name" className="text-sm font-bold text-gray-700">আপনার নাম</Label>
+                    <Input
+                      id="sn-name"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="sn-phone" className="text-sm font-bold text-gray-700">মোবাইল নম্বর *</Label>
+                    <Input
+                      id="sn-phone"
+                      required
+                      inputMode="numeric"
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="01XXXXXXXXX"
+                      className="h-11 font-mono"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="sn-address" className="text-sm font-bold text-gray-700">
+                      আপনার সম্পূর্ণ ঠিকানা লিখুন, থানা, জেলাসহ
+                    </Label>
+                    <Textarea
+                      id="sn-address"
+                      rows={3}
+                      required
+                      value={form.address}
+                      onChange={(e) => setForm({ ...form, address: e.target.value })}
+                      placeholder="বাসা/রোড, থানা, জেলা"
+                    />
+                  </div>
                 </div>
 
-                <div className="rounded-xl bg-[#FAF8F5] border border-gray-200/70 p-4 text-sm font-medium">
-                  {selected.map((product) => (
-                    <div key={product._id} className="mb-1 flex justify-between gap-3 text-gray-700">
-                      <span>{product.name} × {picks[product._id]}</span>
-                      <span className="font-bold text-gray-900">{product.price * (picks[product._id] ?? 0)} টাকা</span>
-                    </div>
-                  ))}
-                  <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-gray-700">
+                <div className="mt-4 rounded-xl bg-[#FAF8F5] border border-gray-200/70 p-4 text-sm font-medium">
+                  <div className="flex justify-between gap-3 text-gray-700">
                     <span>পণ্যের দাম</span>
                     <span className="font-bold text-gray-900">{subtotal} টাকা</span>
                   </div>
-                  <div className="mt-1 flex justify-between text-gray-700">
+                  <div className="mt-1 flex justify-between gap-3 text-gray-700">
                     <span>ডেলিভারি চার্জ</span>
                     <span className="font-bold text-[#18483b]">{freeDelivery ? 'ফ্রি' : `${deliveryCharge} টাকা`}</span>
                   </div>
-                  <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-base font-extrabold text-gray-900">
+                  <div className="mt-2 flex justify-between gap-3 border-t border-gray-200 pt-2 text-base font-extrabold text-gray-900">
                     <span>সর্বমোট</span>
                     <span>{total} টাকা</span>
                   </div>
@@ -457,7 +443,7 @@ export default function PajamaPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-[#18483b] text-white hover:bg-[#123e31] py-6 text-base font-bold rounded-xl shadow-md"
+                  className="mt-4 w-full bg-[#18483b] text-white hover:bg-[#123e31] py-6 text-base font-bold rounded-xl shadow-md"
                   disabled={submitting}
                 >
                   {submitting ? 'জমা হচ্ছে…' : `অর্ডার কনফার্ম করুন — ${total} টাকা`}

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import OfferTabsHeader from '@/components/offers/OfferTabsHeader';
 
 const SIZES = ['M', 'L', 'XL', 'XXL'] as const;
 type Size = (typeof SIZES)[number];
@@ -31,11 +32,28 @@ export default function PoloComboPage() {
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const price = 999;
-  const comboQty = 5;
-  const poloFree = true;
-  const dhakaCharge = 80;
-  const outsideCharge = 150;
+  const [settings, setSettings] = useState({
+    combo_price: 999,
+    combo_qty: 5,
+    polo_free_delivery: 'on',
+    polo_delivery_charge_dhaka: 80,
+    polo_delivery_charge_outside: 150,
+  });
+
+  useEffect(() => {
+    fetch('/api/combos/settings')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.settings) setSettings(d.settings);
+      })
+      .catch(() => {});
+  }, []);
+
+  const price = Number(settings.combo_price) || 999;
+  const comboQty = Number(settings.combo_qty) || 5;
+  const poloFree = settings.polo_free_delivery !== 'off';
+  const dhakaCharge = Math.max(0, Number(settings.polo_delivery_charge_dhaka) || 80);
+  const outsideCharge = Math.max(0, Number(settings.polo_delivery_charge_outside) || 150);
   const deliveryCharge = poloFree ? 0 : deliveryArea === 'dhaka' ? dhakaCharge : outsideCharge;
   const grandTotal = price + deliveryCharge;
 
@@ -57,6 +75,14 @@ export default function PoloComboPage() {
     }
     fetchPoloCombos();
   }, []);
+
+  // Filter variants available in the selected size
+  const availableVariants = useMemo(() => {
+    if (!size) return variants;
+    return variants.filter((v) =>
+      v.sizeStock && v.sizeStock.some((s) => s.size === size && s.stock > 0)
+    );
+  }, [variants, size]);
 
   const totalPicked = useMemo(
     () => Object.values(picks).reduce((s, n) => s + n, 0),
@@ -161,7 +187,9 @@ export default function PoloComboPage() {
   };
 
   return (
-    <div className="pb-16">
+    <div className="min-h-screen bg-[#FAF8F5] pb-16">
+      <OfferTabsHeader />
+
       {done ? (
         <section className="mx-auto max-w-3xl px-4 py-16">
           <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
@@ -183,13 +211,13 @@ export default function PoloComboPage() {
       ) : (
         <>
           {/* Hero Banner & Value Props */}
-          <section className="mx-auto max-w-3xl px-4 pt-10 text-center">
+          <section className="mx-auto max-w-3xl px-4 pt-8 text-center">
             <h1 className="text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl text-gray-900">
               <span>১০০% পিকে কটন কাপড়ের ৫ পিস পোলো শার্ট </span>
               <span className="text-[#18483b] block sm:inline mt-1 sm:mt-0">{price} টাকা</span>
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-base text-gray-600 leading-relaxed">
-              ১০০% কটন কাপড়ের ছেলেদের ৫ পিস পোলো টি-শার্ট মাত্র {price} টাকা। সারা বাংলাদেশে ফ্রি ডেলিভারি — ১ টাকাও আগে দেওয়া লাগবে না, ডেলিভারি ম্যান এর সামনে প্রডাক্ট চেক করে পেমেন্ট করতে পারবেন।
+              ১০০% কটন কাপড়ের ছেলেদের ৫ পিস পোলো টি-শার্ট মাত্র {price} টাকা। সারা বাংলাদেশে {poloFree ? 'ফ্রি ডেলিভারি' : 'ক্যাশ অন ডেলিভারি'} — ১ টাকাও আগে দেওয়া লাগবে না, ডেলিভারি ম্যান এর সামনে প্রডাক্ট চেক করে পেমেন্ট করতে পারবেন।
             </p>
 
             {/* 6 Stats Boxes Grid */}
@@ -216,7 +244,7 @@ export default function PoloComboPage() {
               </div>
               <div className="rounded-xl border border-gray-200/90 bg-white p-4 shadow-2xs flex flex-col items-center justify-center">
                 <Wallet className="h-7 w-7 text-[#18483b]" />
-                <p className="mt-1 text-sm font-medium text-gray-500">ফ্রি ডেলিভারি</p>
+                <p className="mt-1 text-sm font-medium text-gray-500">{poloFree ? 'ফ্রি ডেলিভারি' : 'ক্যাশ অন ডেলিভারি'}</p>
               </div>
             </div>
 
@@ -226,7 +254,7 @@ export default function PoloComboPage() {
                 <ShieldCheck className="h-4 w-4 text-[#18483b]" /> ১০০% এক্সপোর্ট কোয়ালিটি কটন
               </li>
               <li className="flex items-center gap-2">
-                <Truck className="h-4 w-4 text-[#18483b]" /> সারা বাংলাদেশে ফ্রি ডেলিভারি
+                <Truck className="h-4 w-4 text-[#18483b]" /> {poloFree ? 'সারা বাংলাদেশে ফ্রি ডেলিভারি' : 'সারা বাংলাদেশে ডেলিভারি'}
               </li>
               <li className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-[#18483b]" /> হাতে পেয়ে টাকা দিন
@@ -284,7 +312,7 @@ export default function PoloComboPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-gray-900">
                     <span className={totalPicked < comboQty ? 'text-red-600 font-extrabold' : ''}>
-                      ২. পছন্দের ৫টি ডিজাইন বাছুন
+                      ২. পছন্দের {comboQty}টি ডিজাইন বাছুন
                     </span>
                   </h2>
                   <span className="rounded-full bg-[#18483b] px-4 py-1.5 text-sm font-extrabold text-white">
@@ -292,18 +320,18 @@ export default function PoloComboPage() {
                   </span>
                 </div>
                 <p className={`mt-2 text-sm font-medium ${totalPicked < comboQty ? 'text-red-600' : 'text-gray-500'}`}>
-                  নিচের ছবিগুলো থেকে আপনার পছন্দের ৫টি {size} সাইজ এর পোলো শার্ট সিলেক্ট করুন (ছবিতে ট্যাপ করুন) 👇
+                  নিচের ছবিগুলো থেকে আপনার পছন্দের {comboQty}টি {size} সাইজ এর পোলো শার্ট সিলেক্ট করুন (ছবিতে ট্যাপ করুন) 👇
                 </p>
 
                 {loading ? (
                   <p className="mt-6 text-center text-sm font-medium text-gray-500">ছবি লোড হচ্ছে…</p>
-                ) : variants.length === 0 ? (
+                ) : availableVariants.length === 0 ? (
                   <div className="mt-6 rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
-                    এখনো কোনো কালার বা ডিজাইন যুক্ত করা হয়নি। ড্যাশবোর্ড থেকে কালার যোগ করুন।
+                    এই সাইজে এখন কোনো ডিজাইন স্টকে নেই। অন্য সাইজ দেখুন।
                   </div>
                 ) : (
                   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {variants.map((v) => {
+                    {availableVariants.map((v) => {
                       const qty = picks[v._id] ?? 0;
                       const selectionNumber = Object.keys(picks).indexOf(v._id) + 1;
                       const sizeStockRow = v.sizeStock?.find((row) => row.size === size);
@@ -377,7 +405,7 @@ export default function PoloComboPage() {
                 className="mt-6 rounded-2xl border border-gray-200/90 bg-white p-5 sm:p-6 shadow-2xs"
               >
                 <h2 className="text-lg font-bold text-gray-900">
-                  আপনার পছন্দের পাঁচটি কালার অর্ডার করতে আপনার তথ্যগুলো দিন
+                  আপনার পছন্দের {comboQty}টি কালার অর্ডার করতে আপনার তথ্যগুলো দিন
                 </h2>
                 <div className="mt-4 grid gap-4">
                   <div className="grid gap-2">
@@ -444,7 +472,7 @@ export default function PoloComboPage() {
                 {/* Price Breakdown */}
                 <div className="mt-5 rounded-xl bg-[#FAF8F5] border border-gray-200/70 p-4 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 font-medium">৫ পিস পোলো শার্ট ({size})</span>
+                    <span className="text-gray-600 font-medium">{comboQty} পিস পোলো শার্ট ({size})</span>
                     <span className="font-bold text-gray-900">{price} টাকা</span>
                   </div>
                   <div className="mt-1 flex justify-between">

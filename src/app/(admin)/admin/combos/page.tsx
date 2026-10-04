@@ -8,14 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Upload, ExternalLink, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, ExternalLink, RefreshCw, CheckCircle2, Settings } from 'lucide-react';
 import Image from 'next/image';
 
 const SIZES_CLOTHING = ['M', 'L', 'XL', 'XXL'];
 const SIZES_SHOES = ['40', '41', '42', '43', '44'];
 
 export default function AdminCombosPage() {
-  const [activeTab, setActiveTab] = useState<'polo' | 'pajama' | 'sneakers'>('polo');
+  const [activeTab, setActiveTab] = useState<'polo' | 'pajama' | 'sneakers' | 'settings'>('polo');
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<any[]>([]);
 
@@ -40,7 +40,56 @@ export default function AdminCombosPage() {
   const [sneakersImage, setSneakersImage] = useState('');
   const [sneakersStocks, setSneakersStocks] = useState<Record<string, number>>({ '40': 10, '41': 10, '42': 10, '43': 10, '44': 10 });
 
+  // Delivery & Offer Settings State
+  const [settings, setSettings] = useState({
+    combo_price: 999,
+    combo_qty: 5,
+    polo_free_delivery: 'on',
+    polo_delivery_charge_dhaka: 80,
+    polo_delivery_charge_outside: 150,
+    pajama_free_delivery: 'off',
+    pajama_delivery_charge_dhaka: 70,
+    pajama_delivery_charge_outside: 120,
+    sneakers_free_delivery: 'off',
+    sneakers_delivery_charge_dhaka: 80,
+    sneakers_delivery_charge_outside: 130,
+    whatsapp_number: '8801700000000',
+    whatsapp_message: 'হ্যালো Gentsity, আমি একটি প্রোডাক্ট সম্পর্কে জানতে চাই।',
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/combos/settings');
+      const data = await res.json();
+      if (data.success && data.settings) setSettings(data.settings);
+    } catch {}
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const res = await fetch('/api/combos/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        toast.success('ডেলিভারি চার্জ ও সেটিংস সংরক্ষিত হয়েছে!');
+      } else {
+        toast.error(d.message || 'সংরক্ষণ ব্যর্থ হয়েছে');
+      }
+    } catch (err) {
+      toast.error('সংরক্ষণ ব্যর্থ হয়েছে');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   const fetchItems = async (cat = activeTab) => {
+    if (cat === 'settings') return;
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/combos?category=${cat}`);
@@ -58,7 +107,11 @@ export default function AdminCombosPage() {
   };
 
   useEffect(() => {
-    fetchItems(activeTab);
+    if (activeTab === 'settings') {
+      fetchSettings();
+    } else {
+      fetchItems(activeTab);
+    }
   }, [activeTab]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string) => void) => {
@@ -703,6 +756,165 @@ export default function AdminCombosPage() {
               </div>
             )}
           </div>
+        </TabsContent>
+      
+        {/* -------------------- 4. SETTINGS & DELIVERY CHARGES TAB -------------------- */}
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">ফ্রি ডেলিভারি ও চার্জ সেটিংস</CardTitle>
+              <CardDescription>
+                ৩টি ল্যান্ডিং পেজের জন্য আলাদা আলাদা ফ্রি ডেলিভারি টগল ও ডেলিভারি চার্জ নির্ধারণ করুন।
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveSettings} className="space-y-6 max-w-xl">
+                {/* ফ্রি ডেলিভারি (পেজ অনুযায়ী) */}
+                <div className="grid gap-3 rounded-xl border p-4 bg-muted/20">
+                  <h2 className="font-bold text-base">ফ্রি ডেলিভারি (পেজ অনুযায়ী)</h2>
+
+                  {[
+                    { key: 'polo_free_delivery', label: 'পোলো শার্ট' },
+                    { key: 'pajama_free_delivery', label: 'পায়জামা' },
+                    { key: 'sneakers_free_delivery', label: 'স্নিকার্স' },
+                  ].map(({ key, label }) => (
+                    <div key={key} className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold">{label}</span>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="font-bold min-w-16"
+                          variant={(settings as any)[key] === 'on' ? 'default' : 'outline'}
+                          onClick={() => setSettings({ ...settings, [key]: 'on' })}
+                        >
+                          ফ্রি
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="font-bold min-w-16"
+                          variant={(settings as any)[key] === 'off' ? 'default' : 'outline'}
+                          onClick={() => setSettings({ ...settings, [key]: 'off' })}
+                        >
+                          চার্জ
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <p className="text-xs text-muted-foreground mt-1">
+                    যে পেজে "ফ্রি" সিলেক্ট করবেন সেখানে ডেলিভারি চার্জ ০ হবে এবং কাস্টমার "ফ্রি ডেলিভারি" দেখবে। "চার্জ" থাকলে নিচের চার্জগুলো কার্যকর থাকবে।
+                  </p>
+                </div>
+
+                {/* পোলো শার্ট ডেলিভারি চার্জ */}
+                <div className="space-y-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="polo-dhaka">পোলো শার্টের ডেলিভারি চার্জ — ঢাকার ভিতরে (টাকা)</Label>
+                    <Input
+                      id="polo-dhaka"
+                      type="number"
+                      min="0"
+                      value={settings.polo_delivery_charge_dhaka}
+                      onChange={(e) => setSettings({ ...settings, polo_delivery_charge_dhaka: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="polo-outside">পোলো শার্টের ডেলিভারি চার্জ — ঢাকার বাইরে (টাকা)</Label>
+                    <Input
+                      id="polo-outside"
+                      type="number"
+                      min="0"
+                      value={settings.polo_delivery_charge_outside}
+                      onChange={(e) => setSettings({ ...settings, polo_delivery_charge_outside: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                {/* পায়জামা ডেলিভারি চার্জ */}
+                <div className="space-y-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="pj-dhaka">পায়জামার ডেলিভারি চার্জ — ঢাকার ভিতরে (টাকা)</Label>
+                    <Input
+                      id="pj-dhaka"
+                      type="number"
+                      min="0"
+                      value={settings.pajama_delivery_charge_dhaka}
+                      onChange={(e) => setSettings({ ...settings, pajama_delivery_charge_dhaka: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="pj-outside">পায়জামার ডেলিভারি চার্জ — ঢাকার বাইরে (টাকা)</Label>
+                    <Input
+                      id="pj-outside"
+                      type="number"
+                      min="0"
+                      value={settings.pajama_delivery_charge_outside}
+                      onChange={(e) => setSettings({ ...settings, pajama_delivery_charge_outside: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                {/* স্নিকার্স ডেলিভারি চার্জ */}
+                <div className="space-y-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="sn-dhaka">স্নিকার্সের ডেলিভারি চার্জ — ঢাকার ভিতরে (টাকা)</Label>
+                    <Input
+                      id="sn-dhaka"
+                      type="number"
+                      min="0"
+                      value={settings.sneakers_delivery_charge_dhaka}
+                      onChange={(e) => setSettings({ ...settings, sneakers_delivery_charge_dhaka: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="sn-outside">স্নিকার্সের ডেলিভারি চার্জ — ঢাকার বাইরে (টাকা)</Label>
+                    <Input
+                      id="sn-outside"
+                      type="number"
+                      min="0"
+                      value={settings.sneakers_delivery_charge_outside}
+                      onChange={(e) => setSettings({ ...settings, sneakers_delivery_charge_outside: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                {/* কম্বো দাম ও পরিমাণ */}
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="combo-price">কম্বো দাম (টাকা)</Label>
+                    <Input
+                      id="combo-price"
+                      type="number"
+                      min="1"
+                      value={settings.combo_price}
+                      onChange={(e) => setSettings({ ...settings, combo_price: Number(e.target.value) || 999 })}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="combo-qty">কত পিস কম্বো</Label>
+                    <Input
+                      id="combo-qty"
+                      type="number"
+                      min="1"
+                      value={settings.combo_qty}
+                      onChange={(e) => setSettings({ ...settings, combo_qty: Number(e.target.value) || 5 })}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-[#18483b] text-white hover:bg-[#123e31] font-bold py-6 text-base"
+                  disabled={savingSettings}
+                >
+                  {savingSettings ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="h-5 w-5 mr-2" />}
+                  সেটিংস সংরক্ষণ করুন
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
