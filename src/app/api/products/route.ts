@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
           isPublished: isPublished !== undefined ? isPublished : true,
         });
 
-        revalidateTag('products');
+        revalidateTag('products', 'max');
         revalidatePath('/');
         return NextResponse.json(newProduct, { status: 201 });
       } catch (error: any) {
