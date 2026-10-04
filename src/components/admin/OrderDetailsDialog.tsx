@@ -1020,40 +1020,73 @@ export default function OrderDetailsDialog({
             <Separator />
             
             {/* Items */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-bold uppercase text-muted-foreground">Order Items</h4>
-              <div className="space-y-3">
-                {(order.items || []).map((item: any, i: number) => (
-                  <div key={item._id || item.id || i} className="flex items-center justify-between text-sm gap-4">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="h-12 w-12 rounded border overflow-hidden bg-muted flex-shrink-0">
-                         {item.image ? (
-                             <Image src={item.image} alt={item.name} width={48} height={48} className="h-full w-full object-cover" />
-                         ) : (
-                             <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">No Img</div>
-                         )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium line-clamp-1">{item.name}</span>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {item.color && <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 bg-muted/50">{item.color}</Badge>}
-                          {item.size && <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 bg-muted/50">Size: {item.size}</Badge>}
-                          <span className="text-xs text-muted-foreground ml-1">৳{Math.round(Number(item.price) || 0)} × {item.quantity}</span>
+            {/* Items */}
+            {(() => {
+              const isCombo = Boolean(
+                order.internalNote?.toLowerCase().includes('combo') ||
+                order.internalNote?.toLowerCase().includes('landing page') ||
+                order.items?.some((i: any) => Number(i.price) === 0)
+              );
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold uppercase text-muted-foreground">Order Items</h4>
+                    {isCombo && (
+                      <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900 border-amber-200">
+                        কম্বো প্যাকেজ
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    {(order.items || []).map((item: any, i: number) => (
+                      <div key={item._id || item.id || i} className="flex items-center justify-between text-sm gap-4">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="h-12 w-12 rounded border overflow-hidden bg-muted flex-shrink-0">
+                             {item.image ? (
+                                 <Image src={item.image} alt={item.name} width={48} height={48} className="h-full w-full object-cover" />
+                             ) : (
+                                 <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">No Img</div>
+                             )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium line-clamp-1">{item.name}</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {item.color && <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 bg-muted/50">{item.color}</Badge>}
+                              {item.size && <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 bg-muted/50">Size: {item.size}</Badge>}
+                              {isCombo ? (
+                                <span className="text-xs text-muted-foreground font-medium ml-1">১ পিস (কম্বো অন্তর্ভুক্ত)</span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground ml-1">৳{Math.round(Number(item.price) || 0)} × {item.quantity}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="font-bold">
+                          {!isCombo ? (
+                            `৳${Math.round(Number(item.price || 0) * (item.quantity || 0))}`
+                          ) : (
+                            <span className="text-xs text-muted-foreground font-medium bg-muted/60 px-2 py-0.5 rounded">প্যাকেজ আইটেম</span>
+                          )}
                         </div>
                       </div>
-                    </div>
-                    <div className="font-bold">
-                      ৳{Math.round(Number(item.price || 0) * (item.quantity || 0))}
+                    ))}
+                  </div>
+                  
+                  <div className="pt-4 border-t space-y-1.5">
+                    {Number(order.deliveryCharge) > 0 && (
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <span>ডেলিভারি চার্জ:</span>
+                        <span className="font-semibold text-foreground">৳{Math.round(Number(order.deliveryCharge))}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-lg">
+                      <span className="font-bold">{isCombo ? 'কম্বো মোট মূল্য (Total):' : 'Total Amount:'}</span>
+                      <span className="font-black text-primary text-xl">৳{Math.round(Number(order.totalAmount) || 0)}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-              
-              <div className="pt-4 border-t flex justify-between items-center text-lg">
-                <span className="font-bold">Total Amount:</span>
-                <span className="font-black text-primary">৳{Math.round(Number(order.totalAmount) || 0)}</span>
-              </div>
-            </div>
+                </div>
+              );
+            })()}
 
             {/* Quick Actions for Manual Payments */}
             {order.paymentMethod === 'Manual' && order.paymentStatus === 'Pending' && order.status !== 'Cancelled' && (

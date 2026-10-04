@@ -131,7 +131,7 @@ export default function PoloComboPage() {
           id: variantId,
           name: v?.name || `পোলো শার্ট (${v?.colorName || size})`,
           quantity: qty,
-          item_price: Math.round(price / comboQty),
+          item_price: 0,
         };
       });
 
