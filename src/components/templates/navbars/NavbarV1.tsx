@@ -206,7 +206,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 md:relative w-full bg-background border-b md:border-b-0">
         <div className="container mx-auto px-2 md:px-4">
           {/* Middle Main Row: Search | Logo | Icons */}
-          <div className="relative flex h-14 md:h-20 items-center justify-between px-1 md:px-6 border-b border-muted/30">
+          <div className="relative flex h-12 md:h-14 items-center justify-between px-1 md:px-6 border-b border-muted/30">
 
             {/* Desktop Search (Left) */}
             <div className="hidden md:flex flex-1 items-center max-w-[280px]">
@@ -458,9 +458,9 @@ export default function Navbar() {
       {/* ΓöÇΓöÇ Bottom Navigation Row ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       {/* Siblings with <header> so sticky works relative to the viewport,      */}
       {/* not the parent's bounding box. Only visible on desktop (md+).         */}
-      <nav className="hidden md:flex sticky top-0 z-40 w-full h-12 items-center justify-center border-b bg-background/95 backdrop-blur-sm shadow-sm">
+      <nav className="hidden md:flex sticky top-0 z-40 w-full h-9 items-center justify-center border-b bg-background/95 backdrop-blur-sm shadow-sm">
         <div className="container mx-auto px-4 flex justify-center">
-          <ul className="flex items-center gap-10">
+          <ul className="flex items-center gap-2 lg:gap-3.5">
             {navItems.map((item, index) => {
               const isActive = pathname === item.href;
 
@@ -469,7 +469,7 @@ export default function Navbar() {
                   <li className="flex items-center">
                     <Link
                       href={item.href}
-                      className={`text-[12px] font-bold uppercase tracking-[0.25em] transition-all px-4 py-1.5 rounded-full ${isActive
+                      className={`text-[11px] font-bold uppercase tracking-wider transition-all px-2.5 py-1 rounded-full ${isActive
                         ? 'bg-primary text-white shadow-md shadow-primary/20'
                         : 'text-foreground/70 hover:text-primary'
                         }`}
