@@ -1,50 +1,6 @@
-﻿'use client';
+'use client';
 
-import React, { useEffect, use
-
-  const hasTrackedInitiate = useRef(false);
-  useEffect(() => {
-    if (size && totalPicked === comboQty && !hasTrackedInitiate.current) {
-      hasTrackedInitiate.current = true;
-      const validItems = Object.entries(picks).map(([variantId, qty]) => {
-        const v = variants.find((item) => item._id === variantId);
-        return {
-          id: variantId,
-          name: v?.name || `পোলো শার্ট (${v?.colorName || size})`,
-          quantity: qty,
-          item_price: Math.round(price / comboQty),
-        };
-      });
-
-      const checkoutPayload = {
-        content_ids: ['polo-combo', ...Object.keys(picks)],
-        content_type: 'product',
-        value: grandTotal,
-        currency: 'BDT',
-        num_items: comboQty,
-        contents: validItems,
-      };
-
-      const initiateUserData = { country: 'bd' };
-
-      waitForFbq().then(() => {
-        fbEvent('InitiateCheckout', checkoutPayload, initiateUserData);
-        ttEvent('InitiateCheckout', checkoutPayload, initiateUserData);
-      });
-
-      if (typeof window !== 'undefined' && (window as any).dataLayer) {
-        (window as any).dataLayer.push({
-          event: 'begin_checkout',
-          ecommerce: {
-            value: grandTotal,
-            currency: 'BDT',
-            items: validItems,
-          },
-        });
-      }
-    }
-  }, [size, totalPicked, comboQty, picks, grandTotal, variants, price]);
-Memo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Check, ShieldCheck, Truck, Wallet } from 'lucide-react';
@@ -164,6 +120,49 @@ export default function PoloComboPage() {
     }
     prevPicked.current = totalPicked;
   }, [totalPicked, comboQty]);
+
+  const hasTrackedInitiate = useRef(false);
+  useEffect(() => {
+    if (size && totalPicked === comboQty && !hasTrackedInitiate.current) {
+      hasTrackedInitiate.current = true;
+      const validItems = Object.entries(picks).map(([variantId, qty]) => {
+        const v = variants.find((item) => item._id === variantId);
+        return {
+          id: variantId,
+          name: v?.name || `পোলো শার্ট (${v?.colorName || size})`,
+          quantity: qty,
+          item_price: Math.round(price / comboQty),
+        };
+      });
+
+      const checkoutPayload = {
+        content_ids: ['polo-combo', ...Object.keys(picks)],
+        content_type: 'product',
+        value: grandTotal,
+        currency: 'BDT',
+        num_items: comboQty,
+        contents: validItems,
+      };
+
+      const initiateUserData = { country: 'bd' };
+
+      waitForFbq().then(() => {
+        fbEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+        ttEvent('InitiateCheckout', checkoutPayload, initiateUserData);
+      });
+
+      if (typeof window !== 'undefined' && (window as any).dataLayer) {
+        (window as any).dataLayer.push({
+          event: 'begin_checkout',
+          ecommerce: {
+            value: grandTotal,
+            currency: 'BDT',
+            items: validItems,
+          },
+        });
+      }
+    }
+  }, [size, totalPicked, comboQty, picks, grandTotal, variants, price]);
 
   const chooseSize = (s: Size) => {
     setSize(s);
