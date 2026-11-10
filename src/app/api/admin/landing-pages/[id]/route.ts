@@ -108,6 +108,20 @@ export async function DELETE(
       return NextResponse.json({ message: 'Page not found' }, { status: 404 });
     }
 
+    try {
+      const pageImages: string[] = [];
+      const jsonStr = JSON.stringify(deletedPage);
+      const matches = jsonStr.match(/https:\/\/[^"'\s]+\.(?:webp|jpg|jpeg|png|gif|svg)/gi) || [];
+      if (matches.length > 0) {
+        const { deleteMultipleFromR2 } = await import('@/lib/r2');
+        await deleteMultipleFromR2(matches);
+      }
+      const { purgeCloudflareCache } = await import('@/lib/cloudflareCache');
+      await purgeCloudflareCache();
+    } catch (cleanupErr) {
+      console.error('Failed to cleanup landing page images from R2:', cleanupErr);
+    }
+
     return NextResponse.json({ message: 'Page deleted successfully' });
   } catch (error) {
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

@@ -1,4 +1,4 @@
-name: Deploy Gentsity to DigitalOcean
+name: Deploy GentsityDotCom to DigitalOcean
 
 on:
   push:
@@ -56,6 +56,10 @@ jobs:
             mkdir -p ~/gentsity-com
             cd ~/gentsity-com
 
+            cat << 'EOF' > .env.local
+            ${{ secrets.ENV_FILE }}
+            EOF
+
             cat << 'EOF' > docker-compose.yml
             services:
               web:
@@ -71,7 +75,7 @@ jobs:
                 deploy:
                   resources:
                     limits:
-                      memory: 150M
+                      memory: 200M
                     reservations:
                       memory: 80M
                 logging:

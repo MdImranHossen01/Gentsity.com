@@ -52,6 +52,18 @@ export async function DELETE(
       return NextResponse.json({ message: 'Item not found' }, { status: 404 });
     }
 
+    try {
+      const imagesToDelete = [(deleted as any).image, (deleted as any).thumbnail].filter(Boolean);
+      if (imagesToDelete.length > 0) {
+        const { deleteMultipleFromR2 } = await import('@/lib/r2');
+        await deleteMultipleFromR2(imagesToDelete);
+      }
+      const { purgeCloudflareCache } = await import('@/lib/cloudflareCache');
+      await purgeCloudflareCache();
+    } catch (cleanErr) {
+      console.error('Failed to clean combo product images from R2:', cleanErr);
+    }
+
     return NextResponse.json({ success: true, message: 'Item deleted' });
   } catch (error: any) {
     console.error('Error deleting combo item:', error);
