@@ -67,7 +67,7 @@ jobs:
                 container_name: gentsity-com-app
                 restart: unless-stopped
                 ports:
-                  - "3002:3000"
+                  - "3012:3000"
                 environment:
                   - NODE_OPTIONS=--max-old-space-size=125
                 env_file:
